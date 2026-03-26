@@ -1,6 +1,6 @@
 """
 ═══════════════════════════════════════════════════════════════════════
-  COMBINED DEMO: Phase 1 (IoT Sensors) + Phase 2 (AI + Blockchain)
+  COMBINED DEMO: Phase 1 + Phase 2 + Phase 3 (Market Intelligence)
 ═══════════════════════════════════════════════════════════════════════
 
 Run:
@@ -29,6 +29,7 @@ import numpy as np
 DEMO_DIR = os.path.dirname(os.path.abspath(__file__))
 P1_DIR = os.path.join(DEMO_DIR, "phase1_infrastructure")
 P2_DIR = os.path.join(DEMO_DIR, "phase2_ai_blockchain")
+P3_DIR = os.path.join(DEMO_DIR, "phase3_market_intelligence")
 
 
 def load_phase(phase_dir):
@@ -40,7 +41,7 @@ def load_phase(phase_dir):
     # Set path
     if phase_dir not in sys.path:
         sys.path.insert(0, phase_dir)
-    for other in [P1_DIR, P2_DIR]:
+    for other in [P1_DIR, P2_DIR, P3_DIR]:
         if other != phase_dir and other in sys.path:
             sys.path.remove(other)
 
@@ -424,9 +425,98 @@ def main():
             kv("Trade value", f"${amt * 25:.2f}")
 
     # ══════════════════════════════════════════════════════════════════
+    #  STAGE 6: PHASE 3 — MARKET INTELLIGENCE LAYER
+    # ══════════════════════════════════════════════════════════════════
+    header("STAGE 6: MARKET INTELLIGENCE LAYER", CYAN)
+
+    # Load Phase 3 modules (keep Phase 2 objects alive)
+    load_phase(P3_DIR)
+    from src.pipeline.orchestrator import Phase3Pipeline
+
+    p3 = Phase3Pipeline(token, bc)
+
+    # Register all token-holding facilities
+    holders = list(token.get_all_balances().keys())
+    p3.register_participants(holders)
+    kv("Registered participants", len(holders))
+
+    # Feed Phase 2 results into Phase 3
+    print(f"\n    {CYAN}▶ Ingesting Phase 2 results …{RESET}")
+    p3_results = p3.process_phase2_batch(results)
+    kv("Readings ingested", len(p3_results))
+
+    # ── 6a. Dynamic Pricing ─────────────────────────────────────
+    print(f"\n    {CYAN}▶ Dynamic Pricing Engine{RESET}")
+    pricing_update = p3.pricing_engine.update_price(
+        supply=token.total_supply, demand=max(token.total_supply * 0.6, 1.0)
+    )
+    kv("Credit price", f"${pricing_update['current_price']:.2f}")
+    kv("Volatility index", f"{pricing_update['volatility_index']:.4f}")
+    kv("Confidence", f"{pricing_update['confidence']:.2f}")
+
+    # ── 6b. Order Book Trading ──────────────────────────────────
+    print(f"\n    {CYAN}▶ Order Book Trading{RESET}")
+    sorted_holders = sorted(holders, key=lambda h: token.balance_of(h), reverse=True)
+    if len(sorted_holders) >= 2:
+        seller = sorted_holders[0]
+        buyer = sorted_holders[-1]
+        sell_amount = min(token.balance_of(seller) * 0.1, 1.0)
+        if sell_amount > 0.0001:
+            trades = p3.run_marketplace_round(
+                sellers=[{"participant_id": seller, "amount": round(sell_amount, 4),
+                         "price": pricing_update['current_price']}],
+                buyers=[{"participant_id": buyer, "amount": round(sell_amount, 4),
+                        "price": pricing_update['current_price']}],
+            )
+            kv("Trades executed", len(trades))
+            for t in trades:
+                kv(f"  {t['seller']} → {t['buyer']}",
+                   f"{t['amount']:.4f} CCT @ ${t['price']:.2f}")
+        else:
+            print(f"      {YELLOW}⚠ Insufficient balance for demo trade{RESET}")
+    else:
+        print(f"      {YELLOW}⚠ Need ≥2 participants for trading demo{RESET}")
+
+    # ── 6c. Emission Optimization ───────────────────────────────
+    print(f"\n    {CYAN}▶ Emission Optimization{RESET}")
+    if holders:
+        recs = p3.generate_recommendations(holders[0])
+        kv("Facility analysed", holders[0])
+        for rec in recs[:3]:
+            prio = rec.get('priority', 'info')
+            color = GREEN if prio == 'info' else (YELLOW if prio == 'medium' else RED)
+            print(f"      {color}[{prio.upper()}]{RESET} {rec['recommendation']}")
+
+    # ── 6d. Incentive Tier Summary ──────────────────────────────
+    print(f"\n    {CYAN}▶ Incentive System{RESET}")
+    inc_summary = p3.incentives.get_summary()
+    kv("Total bonuses minted", f"{inc_summary['total_bonuses_minted']:.4f} CCT")
+    kv("Total penalties burned", f"{inc_summary['total_penalties_burned']:.4f} CCT")
+    kv("Tier distribution", inc_summary['tier_distribution'])
+
+    # ── 6e. Fraud Detection ─────────────────────────────────────
+    print(f"\n    {CYAN}▶ Fraud Detection{RESET}")
+    fraud_alerts = p3.run_fraud_analysis()
+    kv("Alerts raised", len(fraud_alerts))
+    for a in fraud_alerts[:3]:
+        print(f"      {RED}⚠ {a['alert_type']}{RESET} severity={a['severity']} "
+              f"participants={a['participants']}")
+
+    # ── 6f. Policy Simulation ───────────────────────────────────
+    print(f"\n    {CYAN}▶ Policy Simulation{RESET}")
+    policy = p3.run_policy_simulation()
+    cmp = policy['comparison']
+    kv("Best for emissions", cmp['best_for_emissions'])
+    kv("Best for price stability", cmp['best_for_price_stability'])
+    for sc in cmp.get('scenarios', []):
+        print(f"      {sc['policy']}: price {sc['price_change']:+.1f}%, "
+              f"emissions {sc['emission_change']:+.1f}%")
+
+    # ══════════════════════════════════════════════════════════════════
     #  FINAL SUMMARY
     # ══════════════════════════════════════════════════════════════════
     total_time = time.perf_counter() - total_start
+    p3_report = p3.get_full_report()
 
     header("FINAL SUMMARY", GREEN)
     print(f"""
@@ -446,6 +536,14 @@ def main():
     │    CCT tokens minted:    {token.total_supply:<10.4f}                           │
     │    Token holders:        {len(token.get_all_balances()):<10}                           │
     │    Net credits:          {net_balance:<10.6f}                         │
+    ├────────────────────────────────────────────────────────────────┤
+    │  {BOLD}Phase 3: Market Intelligence Layer{RESET}                            │
+    │    Participants:         {len(holders):<10}                           │
+    │    Credit price:         ${pricing_update['current_price']:<9.2f}                           │
+    │    Order book trades:    {p3_report['order_book']['total_trades']:<10}                           │
+    │    Incentive actions:    {inc_summary['total_actions']:<10}                           │
+    │    Fraud alerts:         {len(fraud_alerts):<10}                           │
+    │    Policies simulated:   {policy['comparison'].get('scenarios', []).__len__():<10}                           │
     ├────────────────────────────────────────────────────────────────┤
     │  {BOLD}Performance{RESET}                                                   │
     │    Total execution:      {total_time:<10.2f}s                          │

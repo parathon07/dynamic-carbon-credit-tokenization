@@ -11,6 +11,7 @@ env/
 .pytest_cache/
 htmlcov/
 .coverage
+*.log
 
 # Environment
 .env
@@ -36,3 +37,8 @@ phase2_ai_blockchain/models/
 *.egg-info/
 dist/
 build/
+
+# Temp / output files
+demo_output.txt
+test_output.txt
+*.tmp

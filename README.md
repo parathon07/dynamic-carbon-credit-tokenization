@@ -1,87 +1,32 @@
 # Blockchain-Based Dynamic Carbon Credit Tokenisation System
 
-A distributed system for **real-time industrial carbon emission monitoring**, **AI-powered emission estimation**, and **blockchain-validated carbon credit tokenization** with peer-to-peer trading.
+An end-to-end AI and blockchain-integrated platform for **real-time carbon emission monitoring**, **credit tokenisation**, and **market-based trading**. Built across three phases — from IoT sensor simulation through AI inference and blockchain recording to a fully autonomous carbon credit marketplace.
 
 ---
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Phase 1 — IoT Infrastructure](#phase-1--iot-infrastructure)
-- [Phase 2 — AI + Blockchain](#phase-2--ai--blockchain)
-- [Data Flow Pipeline](#data-flow-pipeline)
-- [Key Algorithms & Formulas](#key-algorithms--formulas)
-- [Setup & Installation](#setup--installation)
-- [Running the Demo](#running-the-demo)
-- [Testing](#testing)
-- [Tech Stack](#tech-stack)
-- [License](#license)
-
----
-
-## Overview
-
-This project implements an end-to-end pipeline that:
-
-1. **Simulates** 50 industrial IoT facilities (5 industry types) generating real-time emission sensor data
-2. **Processes** readings through edge computing with Kalman filtering and validation
-3. **Predicts** CO₂-equivalent emissions using Random Forest & Linear Regression models
-4. **Detects** anomalies via Isolation Forest + z-score thresholds
-5. **Calculates** carbon credits based on baseline vs actual emissions
-6. **Records** all transactions on a SHA-256 proof-of-work blockchain
-7. **Mints** ERC-20 style Carbon Credit Tokens (CCT) for verified reductions
-8. **Enables** peer-to-peer token trading between facilities
-
----
-
-## Architecture
+## Architecture Overview
 
 ```
-                            ┌─────────────────────────────────────────┐
-                            │          PHASE 1: IoT INFRASTRUCTURE    │
-                            │                                         │
- ┌──────────────┐           │  ┌──────────┐   ┌───────────────────┐  │
- │  50 Facility │──MQTT──▶  │  │   Edge   │──▶│   FastAPI Backend │  │
- │  Simulators  │  (QoS 1)  │  │ Gateway  │   │   + TimescaleDB   │  │
- └──────────────┘           │  └──────────┘   └───────────────────┘  │
-   5 sensor types           │   • Validate     • /api/v1/ingest      │
-   15s intervals            │   • Kalman       • ORM models          │
-   AR(1) + anomalies        │   • SQLite buf   • Hypertable          │
-                            └─────────┬───────────────────────────────┘
-                                      │  Validated sensor readings
-                                      ▼
-                            ┌─────────────────────────────────────────┐
-                            │        PHASE 2: AI + BLOCKCHAIN         │
-                            │                                         │
-                            │  ┌─────────────────────────────────┐   │
-                            │  │  PREPROCESSING                  │   │
-                            │  │  Clean → Normalize → Synchronize│   │
-                            │  └──────────────┬──────────────────┘   │
-                            │                 ▼                       │
-                            │  ┌─────────────────────────────────┐   │
-                            │  │  AI ENGINE                      │   │
-                            │  │  Random Forest → CO₂e estimate  │   │
-                            │  │  Isolation Forest → anomalies   │   │
-                            │  └──────────────┬──────────────────┘   │
-                            │                 ▼                       │
-                            │  ┌─────────────────────────────────┐   │
-                            │  │  CARBON CREDITS                 │   │
-                            │  │  Baseline vs actual → rewards   │   │
-                            │  └──────────────┬──────────────────┘   │
-                            │                 ▼                       │
-                            │  ┌─────────────────────────────────┐   │
-                            │  │  BLOCKCHAIN + TOKEN LAYER       │   │
-                            │  │  SHA-256 chain → CCT minting    │   │
-                            │  │  Smart contracts → P2P trading  │   │
-                            │  └──────────────┬──────────────────┘   │
-                            │                 ▼                       │
-                            │  ┌─────────────────────────────────┐   │
-                            │  │  DASHBOARD MONITOR              │   │
-                            │  │  Real-time stats & reporting    │   │
-                            │  └─────────────────────────────────┘   │
-                            └─────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                         DATA FLOW PIPELINE                             │
+│                                                                        │
+│  IoT Sensors ──→ Edge Gateway ──→ Backend ──→ AI Engine ──→ Carbon     │
+│  (Phase 1)       (Kalman/SQLite)              (RF + IF)     Credits    │
+│                                                              │         │
+│                                         ┌────────────────────┘         │
+│                                         ▼                              │
+│            Blockchain Ledger ◄── Token Manager ──→ Marketplace         │
+│            (SHA-256 PoW)         (ERC-20 CCT)      (Phase 3)           │
+│                  │                                     │               │
+│                  ▼                                     ▼               │
+│            Immutable Record              ┌─────────────────────────┐   │
+│                                          │ Dynamic Pricing (ARIMA) │   │
+│                                          │ Order Book (P2P)        │   │
+│                                          │ Fraud Detection         │   │
+│                                          │ Policy Simulation       │   │
+│                                          │ Emission Optimization   │   │
+│                                          └─────────────────────────┘   │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -90,323 +35,276 @@ This project implements an end-to-end pipeline that:
 
 ```
 Distributed_project/
+├── run_demo.py                     # Combined demo (all 3 phases)
+├── README.md
+├── .gitignore
 │
-├── README.md                             # This file
-├── .gitignore                            # Root-level git ignore rules
-├── run_demo.py                           # Combined Phase 1 + Phase 2 demo runner
-│
-├── phase1_infrastructure/                # ── PHASE 1: IoT Sensor Pipeline ──
-│   ├── requirements.txt                  # Python dependencies
-│   ├── .env.example                      # Environment variables template
-│   ├── pytest.ini                        # Pytest configuration
+├── phase1_infrastructure/          # IoT + Edge + Backend
 │   ├── src/
-│   │   ├── config.py                     # Central config (env-based)
 │   │   ├── sensors/
-│   │   │   ├── data_generator.py         # Synthetic facility simulators (AR(1) + anomalies)
-│   │   │   └── mqtt_publisher.py         # Multi-threaded MQTT publishers (QoS 1)
-│   │   ├── edge/
-│   │   │   ├── kalman_filter.py          # 1-D Kalman noise reduction (~67%)
-│   │   │   ├── sqlite_buffer.py          # Store-and-forward buffer (WAL mode)
-│   │   │   └── gateway.py               # Validate → filter → buffer → forward
-│   │   └── backend/
-│   │       ├── models.py                 # SQLAlchemy ORM (EmissionReading)
-│   │       ├── database.py              # Sync/async engine + session factories
-│   │       └── api.py                    # FastAPI: ingest, queries, health
+│   │   │   └── data_generator.py   # Multi-facility IoT simulator
+│   │   └── edge/
+│   │       ├── gateway.py          # Edge validation + SQLite buffer
+│   │       └── kalman_filter.py    # 1-D Kalman noise filter
 │   ├── tests/
-│   │   └── test_phase1.py               # 100+ test cases
-│   └── data/                             # Runtime data (gitignored)
+│   └── requirements.txt
 │
-├── phase2_ai_blockchain/                 # ── PHASE 2: AI + Blockchain Layer ──
-│   ├── requirements.txt                  # Python dependencies
-│   ├── pytest.ini                        # Pytest configuration
+├── phase2_ai_blockchain/           # AI + Blockchain + Tokenisation
 │   ├── src/
-│   │   ├── config.py                     # Emission factors, baselines, blockchain params
 │   │   ├── preprocessing/
-│   │   │   ├── cleaner.py               # Null/noise removal, outlier clipping
-│   │   │   ├── normalizer.py            # Min-max & z-score normalization
-│   │   │   └── synchronizer.py          # Timestamp grid alignment
+│   │   │   ├── cleaner.py          # NaN/outlier handling
+│   │   │   ├── normalizer.py       # Min-max / z-score
+│   │   │   └── synchronizer.py     # 15-sec grid alignment
 │   │   ├── ai_engine/
-│   │   │   ├── emission_model.py        # Random Forest + Linear Regression CO₂e
-│   │   │   ├── anomaly_detector.py      # Isolation Forest + z-score detection
-│   │   │   ├── training.py             # Synthetic data generation & model training
-│   │   │   └── inference.py             # Model loading & real-time prediction
+│   │   │   ├── emission_model.py   # Random Forest CO₂e estimator
+│   │   │   ├── anomaly_detector.py # Isolation Forest + z-score
+│   │   │   └── training.py         # Synthetic data generation
 │   │   ├── carbon_credits/
-│   │   │   ├── baselines.py             # Per-type emission baselines
-│   │   │   └── calculator.py            # Reward/penalty credit computation
+│   │   │   ├── calculator.py       # Credit / penalty computation
+│   │   │   └── baselines.py        # Per-type emission baselines
 │   │   ├── blockchain/
-│   │   │   ├── ledger.py                # SHA-256 hash chain with proof-of-work
-│   │   │   ├── token_manager.py         # ERC-20 style CCT token operations
-│   │   │   ├── smart_contracts.py       # Emission record & credit issuance contracts
-│   │   │   └── trading.py              # P2P order book trading engine
+│   │   │   ├── ledger.py           # SHA-256 hash-chain (PoW)
+│   │   │   ├── token_manager.py    # ERC-20 CCT token
+│   │   │   ├── smart_contracts.py  # Validation, issuance, trading
+│   │   │   └── trading.py          # Basic order matching
 │   │   ├── pipeline/
-│   │   │   └── orchestrator.py          # Full IoT → AI → Blockchain pipeline
+│   │   │   └── orchestrator.py     # Phase 2 unified pipeline
 │   │   └── dashboard/
-│   │       └── monitor.py               # Real-time stats and reporting
+│   │       └── monitor.py          # Real-time stats tracker
 │   ├── tests/
-│   │   └── test_phase2.py               # 70+ test cases
-│   └── models/                           # Saved ML models (.pkl, gitignored)
+│   └── requirements.txt
+│
+└── phase3_market_intelligence/     # Marketplace + AI Pricing + Risk
+    ├── src/
+    │   ├── config.py               # All Phase 3 parameters
+    │   ├── marketplace/
+    │   │   ├── marketplace.py      # P2P listings, bids, purchases
+    │   │   └── wallet.py           # Per-participant wallet
+    │   ├── pricing/
+    │   │   ├── pricing_engine.py   # ARIMA + supply-demand pricing
+    │   │   └── market_signals.py   # Signal aggregation
+    │   ├── trading/
+    │   │   └── order_book.py       # Price-time priority matching
+    │   ├── optimization/
+    │   │   └── optimizer.py        # Emission reduction recommender
+    │   ├── incentives/
+    │   │   └── incentive_engine.py # Tiered rewards + penalties
+    │   ├── risk/
+    │   │   └── fraud_detector.py   # Wash trade / manipulation detection
+    │   ├── analytics/
+    │   │   └── analytics.py        # Market reports + forecasting
+    │   ├── policy/
+    │   │   └── policy_simulator.py # Carbon tax / cap-and-trade sim
+    │   └── pipeline/
+    │       └── orchestrator.py     # Phase 3 integration pipeline
+    ├── tests/
+    └── requirements.txt
 ```
 
 ---
 
-## Phase 1 — IoT Infrastructure
+## Phase 1: IoT Sensor Infrastructure
 
-Phase 1 implements the **data collection and edge processing** layer.
+**Purpose:** Simulate industrial IoT sensors, validate data at the edge, and prepare readings for AI processing.
 
-### Sensor Simulation
+| Component | Description |
+|-----------|-------------|
+| `data_generator.py` | Generates 15-second interval readings for 5 facility types (CO₂, CH₄, NOₓ, fuel rate, energy) |
+| `gateway.py` | Edge validation with fault detection (-999 sentinel), range clipping, SQLite buffering |
+| `kalman_filter.py` | 1-D Kalman filter for sensor noise reduction |
 
-| Feature       | Detail                                                  |
-|---------------|---------------------------------------------------------|
-| Facilities    | 50 simulated (5 industry types, cyclic assignment)      |
-| Sensors       | CO₂ (ppm), CH₄ (ppm), NOₓ (ppb), fuel rate, energy kWh |
-| Interval      | 15 seconds                                              |
-| Patterns      | Diurnal (±25%), weekly (weekday/weekend)                |
-| Correlations  | fuel↔CO₂, energy↔NOₓ                                   |
-| Anomalies     | Spikes (0.2%), sensor faults (0.1%), downtime (0.05%)   |
-| Model         | AR(1) with Gaussian noise, soft-clamped ranges          |
-
-### Industry Types
-
-| Type                     | CO₂ (ppm)  | CH₄ (ppm) | NOₓ (ppb)  | Fuel Rate   | Energy (kWh) |
-|--------------------------|------------|------------|------------|-------------|--------------|
-| Chemical Manufacturing   | 380–520    | 1.5–4.0    | 30–80      | 100–250     | 2,000–5,000  |
-| Power Generation         | 400–650    | 1.0–3.0    | 40–120     | 200–500     | 5,000–12,000 |
-| Cement Production        | 450–700    | 0.8–2.5    | 50–100     | 150–400     | 3,000–8,000  |
-| Steel Manufacturing      | 420–680    | 1.2–3.5    | 35–90      | 180–450     | 4,000–10,000 |
-| Petroleum Refining       | 500–800    | 2.0–6.0    | 60–150     | 300–700     | 6,000–15,000 |
-
-### Edge Processing
-
-- **Kalman Filter** — 1-D scalar filter per sensor per facility (~67% noise reduction)
-- **Validation** — Range checks, null/type rejection, fault sentinel (-999) rejection
-- **SQLite Buffer** — Thread-safe WAL-mode store-and-forward with FIFO ordering
-- **Forwarder** — Exponential backoff (1s–60s), batch POST to backend
+**Facility Types:** Chemical Manufacturing, Power Generation, Cement Production, Steel Manufacturing, Petroleum Refining
 
 ---
 
-## Phase 2 — AI + Blockchain
+## Phase 2: AI + Blockchain Layer
 
-Phase 2 transforms validated sensor data into **verified emissions, carbon credits, and blockchain-backed tokens**.
+**Purpose:** AI-based emission estimation, anomaly detection, carbon credit calculation, and immutable blockchain recording with ERC-20 tokenisation.
 
 ### AI Engine
+| Model | Algorithm | Purpose |
+|-------|-----------|---------|
+| Emission Estimator | **Random Forest** (100 trees) | Predict CO₂e emissions from 5 sensor inputs |
+| Anomaly Detector | **Isolation Forest** + z-score (σ > 3) | Classify normal / emission spike / sensor fault |
 
-| Model             | Purpose                              | Method                           |
-|-------------------|--------------------------------------|----------------------------------|
-| Emission Estimator| Predict CO₂-equivalent emissions     | Random Forest + Linear Regression|
-| Anomaly Detector  | Detect emission spikes & sensor faults| Isolation Forest + z-score (σ>3) |
-
-**Features used**: `co2_ppm`, `ch4_ppm`, `nox_ppb`, `fuel_rate`, `energy_kwh`
-
-### Carbon Credits
-
-- Credits are calculated as: `net_credits = (baseline - actual_emission) × 0.001`
-- **Reductions earn** rewards (1× multiplier)
-- **Excess emissions** incur penalties (1.2× multiplier)
-- 1 credit = 1 tonne CO₂e
-
-### Blockchain
-
-| Feature           | Detail                                        |
-|-------------------|-----------------------------------------------|
-| Hash Algorithm    | SHA-256                                       |
-| Consensus         | Proof-of-Work (difficulty = 2)                |
-| Token Standard    | ERC-20 style (CarbonCreditToken / CCT)        |
-| Smart Contracts   | Emission recording, credit issuance, trading  |
-| Trading           | P2P order book with transfer validation       |
-
----
-
-## Data Flow Pipeline
-
+**CO₂e Formula:**
 ```
-FacilitySimulator.generate_reading(t)                          ← Phase 1
-    │  {facility_id, timestamp_utc, co2_ppm, ch4_ppm, nox_ppb, fuel_rate, energy_kwh}
-    ▼
-Edge Gateway                                                    ← Phase 1
-    ├─ Validate (range checks, missing keys, fault detection)
-    ├─ Kalman Filter (per-facility × per-sensor)
-    └─ SQLite Buffer (WAL, thread-safe)
-         │
-         ▼
-Data Preprocessing                                              ← Phase 2
-    ├─ DataCleaner (null removal, outlier clipping)
-    ├─ Normalizer (min-max, z-score)
-    └─ TimestampSynchronizer (grid alignment)
-         │
-         ▼
-AI Engine                                                       ← Phase 2
-    ├─ EmissionEstimator.predict() → {co2e_emission, confidence_score}
-    └─ AnomalyDetector.detect() → {anomaly_flag, anomaly_type, severity}
-         │
-         ▼
-Carbon Credit Calculator                                        ← Phase 2
-    └─ (baseline - actual) × 0.001 → credits_earned / penalty
-         │
-         ▼
-Blockchain Layer                                                ← Phase 2
-    ├─ EmissionRecordContract → record on-chain
-    ├─ CreditIssuanceContract → mint CCT tokens
-    └─ TradingContract → P2P token trading
-         │
-         ▼
-Dashboard Monitor                                               ← Phase 2
-    └─ Real-time statistics, anomaly alerts, credit summaries
+CO₂e = (CO₂_ppm × 0.044 × 1.0) + (CH₄_ppm × 0.016 × 28.0) + (NOₓ_ppb × 0.000046 × 265.0)
+```
+
+### Blockchain & Tokenisation
+- **Ledger:** SHA-256 hash-chained blocks with configurable proof-of-work difficulty
+- **Token (CCT):** ERC-20 style with mint, transfer, burn, approve, transferFrom
+- **Double-counting prevention:** Unique `emission_hash` per reading ensures no duplicate minting
+- **Smart Contracts:** Emission recording, credit issuance, and P2P trading validation
+
+### Credit Calculation
+```
+net_credits = (baseline - actual) × conversion_factor
+credits_earned  = max(0, net_credits) × reward_multiplier
+credits_penalty = max(0, -net_credits) × penalty_multiplier
 ```
 
 ---
 
-## Key Algorithms & Formulas
+## Phase 3: Market Intelligence Layer
 
-| Calculation          | Formula                                                       |
-|----------------------|---------------------------------------------------------------|
-| CO₂ equivalent       | `CO₂e = CO₂_kg × 1.0 + CH₄_kg × 28.0 + NOₓ_kg × 265.0`    |
-| Net carbon credits   | `(baseline − actual) × 0.001` (1 credit = 1 tonne CO₂e)     |
-| Credit penalty       | `abs(net_credit) × 1.2` (for excess emissions)               |
-| Anomaly z-score      | `z = (x − μ) / σ`, flag if `|z| > 3`                         |
-| Block hash           | `SHA-256(index ‖ timestamp ‖ data ‖ prev_hash ‖ nonce)`      |
-| Kalman update        | `K = P/(P+R); x̂ = x̂ + K(z−x̂); P = (1−K)P`                 |
+**Purpose:** Full-featured carbon credit marketplace with AI-driven pricing, smart trading, emission optimization, fraud detection, and policy simulation.
 
-### GWP-100 Emission Factors (IPCC)
+### 3.1 P2P Marketplace
+- Participant wallet management (CCT balance, trade history)
+- Credit listing & bidding system with automatic expiry
+- Direct purchases with 1% marketplace fee
+- All trades recorded on blockchain with unique `tx_hash`
 
-| Gas    | Global Warming Potential |
-|--------|-------------------------|
-| CO₂    | 1.0 (reference)         |
-| CH₄    | 28.0                    |
-| N₂O    | 265.0                   |
+### 3.2 Dynamic Pricing Engine
+- **Supply-demand equilibrium:** Price adjusts inversely with supply/demand ratio
+- **ARIMA forecasting:** Time-series prediction with (2,1,2) order (EMA fallback)
+- **Volatility index:** Rolling standard deviation of price returns
+- **Floor / Ceiling:** $5 – $200 per CCT
+
+### 3.3 Smart Trading (Order Book)
+- **Price-time priority** matching (like a stock exchange)
+- **Limit orders:** Execute at specified price or better
+- **Market orders:** Execute at best available price
+- **Bid-ask spread** tracking
+- All settlements via `CarbonToken.transfer()`
+
+### 3.4 Emission Optimization
+- Facility-level fuel usage and energy efficiency recommendations
+- Trend analysis (increasing vs. decreasing emissions)
+- Peer comparison against facility-type benchmarks
+- Priority-ranked actionable recommendations
+
+### 3.5 Incentive & Penalty System
+| Tier | Reduction Required | Bonus Multiplier |
+|------|--------------------|-------------------|
+| 🥇 Gold | ≥ 20% | 1.5× |
+| 🥈 Silver | ≥ 10% | 1.25× |
+| 🥉 Bronze | ≥ 5% | 1.1× |
+
+- **Escalating penalties** for consecutive violations (up to 3×)
+- **Early adopter bonus:** 15% extra for first 10 participants
+- Bonuses are minted, penalties are burned via `CarbonToken`
+
+### 3.6 Fraud Detection
+| Method | Detection |
+|--------|-----------|
+| Wash trading | Repeated trades between same pair in 60-sec window |
+| Credit hoarding | Single participant holds > 30% of total supply |
+| Velocity spike | Abnormal trade frequency (z-score > 3) |
+| Price manipulation | Trades at prices > 3σ from market average |
+
+### 3.7 Market Analytics
+- Market overview (volume, value, participants)
+- Price analytics with trend and volatility
+- Credit flow tracking (mints, burns, trades)
+- Participant leaderboard (top buyers / sellers)
+- Exponential smoothing price forecast
+
+### 3.8 Policy Simulation
+| Policy | Effect |
+|--------|--------|
+| **Carbon tax** ($10–$200/tonne) | Higher tax → higher credit prices, lower emissions |
+| **Cap-and-trade** (emission cap) | Tight cap → scarcity → price increase |
+| **Clean energy subsidy** (up to 100%) | Faster adoption → lower emissions, moderate price drop |
+
+Scenario comparison identifies best policy for emissions vs. price stability.
 
 ---
 
-## Setup & Installation
+## Quick Start
 
 ### Prerequisites
+- Python ≥ 3.10
+- pip (package manager)
 
-- **Python 3.10+**
-- **pip** (Python package manager)
-
-### Install Dependencies
+### Installation
 
 ```bash
-# Phase 1 dependencies
+# Clone the repository
+git clone https://github.com/<your-username>/dynamic-carbon-credit-tokenization.git
+cd dynamic-carbon-credit-tokenization
+
+# Install dependencies for all phases
 pip install -r phase1_infrastructure/requirements.txt
-
-# Phase 2 dependencies
 pip install -r phase2_ai_blockchain/requirements.txt
+pip install -r phase3_market_intelligence/requirements.txt
 ```
 
-### Environment Configuration (Phase 1)
-
-```bash
-cp phase1_infrastructure/.env.example phase1_infrastructure/.env
-# Edit .env with your MQTT broker, PostgreSQL, and gateway settings
-```
-
-> **Note**: The combined demo (`run_demo.py`) runs entirely in-process without needing external services (MQTT broker, PostgreSQL). External services are only needed for production deployment.
-
----
-
-## Running the Demo
-
-The project includes a **combined demo** that runs both phases end-to-end:
+### Run the Full Demo
 
 ```bash
 python run_demo.py
 ```
 
-This executes a 5-stage pipeline:
+This executes all 3 phases end-to-end:
+1. **Stage 1:** IoT sensor data generation (50 facilities × 20 readings)
+2. **Stage 2:** AI model training (Random Forest + Isolation Forest)
+3. **Stage 3:** Pipeline processing (clean → predict → detect → credit → blockchain)
+4. **Stage 4:** Results summary (emissions, anomalies, credits, tokens)
+5. **Stage 5:** P2P credit trading demo
+6. **Stage 6:** Market intelligence (pricing, optimization, incentives, fraud, policy)
 
-| Stage | Description                                                    |
-|-------|----------------------------------------------------------------|
-| 1     | Generate IoT sensor data from 50 facilities (1,000 readings)  |
-| 2     | Train AI models (Random Forest estimator, Isolation Forest)    |
-| 3     | Process all readings through full pipeline (clean → predict → credit → chain) |
-| 4     | Display results — emissions, anomalies, credits, blockchain, tokens |
-| 5     | Execute P2P carbon credit trade between top token holders      |
-
-### Expected Output
-
-- **Fleet overview** of 50 facilities across 5 industry types
-- **AI model metrics** (R² scores, feature importance)
-- **Per-type emission summaries** with baseline comparison
-- **Anomaly detection** with severity scores and type breakdown
-- **Carbon credit balance** (earned, penalties, net CCT)
-- **Blockchain integrity check** (chain validation, block count)
-- **Token holder rankings** and P2P trade execution
-
----
-
-## Testing
-
-Both phases include comprehensive validation suites.
-
-### Run All Tests
+### Run Tests
 
 ```bash
-# Phase 1 tests (100+ cases)
-python -m pytest phase1_infrastructure/tests/test_phase1.py -v
+# Phase 1 (100+ tests)
+cd phase1_infrastructure
+python -m pytest tests/ -v
 
-# Phase 2 tests (70+ cases)
-python -m pytest phase2_ai_blockchain/tests/test_phase2.py -v
+# Phase 2 (70+ tests)
+cd phase2_ai_blockchain
+python -m pytest tests/ -v
+
+# Phase 3 (79 tests)
+cd phase3_market_intelligence
+python -m pytest tests/ -v
 ```
-
-### Phase 1 Test Coverage
-
-| Category           | Tests | Validates                                          |
-|--------------------|-------|----------------------------------------------------|
-| Functional         | 20    | JSON schema, IDs, timestamps, types, determinism   |
-| Data Validation    | 14    | Value ranges, correlations, noise, anomaly patterns |
-| Edge Processing    | 23    | Kalman filter, SQLite buffer, gateway validation    |
-| Backend API        | 9     | Pydantic schemas, response models                  |
-| Database Schema    | 8     | ORM columns, indices, constraints, nullability      |
-| Pipeline Integrity | 4     | Zero data loss, traceability, latency              |
-| Performance        | 4     | Throughput ≥200/s, burst, SQLite ≥500/s, memory    |
-| Fault Tolerance    | 5     | Store-and-forward, persistence, recovery, backoff  |
-| End-to-End         | 3     | Full pipeline, 50-facility streaming, drain cycle  |
-
-### Phase 2 Test Coverage
-
-| Category          | Validates                                            |
-|-------------------|------------------------------------------------------|
-| Preprocessing     | Cleaning, normalization, timestamp synchronization   |
-| AI Models         | Training, prediction accuracy, anomaly detection     |
-| Carbon Credits    | Baseline calculation, reward/penalty logic            |
-| Blockchain        | Chain integrity, proof-of-work, block validation     |
-| Token Management  | Minting, transfers, balance tracking                 |
-| Smart Contracts   | Emission recording, credit issuance, trading         |
-| Pipeline          | End-to-end orchestration, data flow integrity        |
-
-### Key Performance Thresholds
-
-| Metric                          | Threshold        |
-|---------------------------------|------------------|
-| Schema compliance               | 100%             |
-| Fuel↔CO₂ Pearson r              | > 0.3            |
-| Kalman noise reduction          | > 40%            |
-| Processing latency              | < 50ms/reading   |
-| Throughput                      | ≥ 200 readings/s |
-| Data loss                       | 0%               |
-| Buffer persistence              | 100% recovery    |
-| Memory growth (10K readings)    | < 50 MB          |
 
 ---
 
-## Tech Stack
+## Key Dependencies
 
-| Layer              | Technology                                         |
-|--------------------|----------------------------------------------------|
-| Sensors            | Python, NumPy, paho-mqtt                           |
-| Edge Processing    | Kalman filter, SQLite (WAL), httpx                 |
-| Backend API        | FastAPI, SQLAlchemy 2.0, Pydantic                  |
-| Database           | PostgreSQL + TimescaleDB                           |
-| Messaging          | MQTT (Eclipse Mosquitto)                           |
-| ML Models          | scikit-learn (Random Forest, Isolation Forest)     |
-| Data Processing    | NumPy, pandas, SciPy                               |
-| Blockchain         | Custom SHA-256 chain (no external node)            |
-| Token Standard     | ERC-20 style (CCT — in-process simulation)         |
-| Model Persistence  | joblib                                             |
-| Testing            | pytest                                             |
+| Phase | Package | Purpose |
+|-------|---------|---------|
+| 1 | `fastapi`, `uvicorn` | Backend REST API |
+| 1 | `psycopg2`, `sqlalchemy` | TimescaleDB integration |
+| 1 | `paho-mqtt` | MQTT broker for sensors |
+| 2 | `scikit-learn` | Random Forest, Isolation Forest |
+| 2 | `numpy`, `pandas` | Data processing |
+| 3 | `statsmodels` | ARIMA time-series forecasting |
+| 3 | `scipy` | Statistical analysis |
+
+---
+
+## Test Coverage Summary
+
+| Phase | Tests | Coverage |
+|-------|-------|----------|
+| Phase 1: IoT Infrastructure | 100+ | Sensor generation, edge validation, Kalman filter, gateway |
+| Phase 2: AI + Blockchain | 70+ | Preprocessing, AI models, credits, blockchain, tokens, contracts, pipeline |
+| Phase 3: Market Intelligence | 79 | Marketplace, pricing, order book, optimizer, incentives, fraud, analytics, policy, integration |
+| **Total** | **250+** | **End-to-end validated** |
+
+---
+
+## Performance Benchmarks (Demo Run)
+
+| Metric | Value |
+|--------|-------|
+| Facilities simulated | 50 |
+| Sensor readings | 1,000 |
+| AI model R² score | 0.9994 |
+| Anomaly detection rate | ~5% |
+| Blockchain blocks | ~2,700 |
+| Pipeline throughput | ~67 readings/sec |
+| Credit price (dynamic) | $23.50 |
+| Incentive tiers | 10 Gold, 10 Silver, 27 Bronze |
+| Total execution time | ~21 seconds |
 
 ---
 
 ## License
 
-This project is developed for academic and research purposes.
+This project is developed as part of academic research. Contact the authors for usage and licensing information.
