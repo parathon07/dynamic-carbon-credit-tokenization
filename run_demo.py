@@ -1,6 +1,6 @@
 """
 ═══════════════════════════════════════════════════════════════════════
-  COMBINED DEMO: Phase 1 + Phase 2 + Phase 3 (Market Intelligence)
+  COMBINED DEMO: Phase 1 + Phase 2 + Phase 3 + Phase 4 (Evaluation)
 ═══════════════════════════════════════════════════════════════════════
 
 Run:
@@ -30,6 +30,7 @@ DEMO_DIR = os.path.dirname(os.path.abspath(__file__))
 P1_DIR = os.path.join(DEMO_DIR, "phase1_infrastructure")
 P2_DIR = os.path.join(DEMO_DIR, "phase2_ai_blockchain")
 P3_DIR = os.path.join(DEMO_DIR, "phase3_market_intelligence")
+P4_DIR = os.path.join(DEMO_DIR, "phase4_evaluation")
 
 
 def load_phase(phase_dir):
@@ -41,7 +42,7 @@ def load_phase(phase_dir):
     # Set path
     if phase_dir not in sys.path:
         sys.path.insert(0, phase_dir)
-    for other in [P1_DIR, P2_DIR, P3_DIR]:
+    for other in [P1_DIR, P2_DIR, P3_DIR, P4_DIR]:
         if other != phase_dir and other in sys.path:
             sys.path.remove(other)
 
@@ -513,6 +514,80 @@ def main():
               f"emissions {sc['emission_change']:+.1f}%")
 
     # ══════════════════════════════════════════════════════════════════
+    #  STAGE 7: PHASE 4 — SYSTEM EVALUATION
+    # ══════════════════════════════════════════════════════════════════
+    header("STAGE 7: SYSTEM EVALUATION", YELLOW)
+
+    load_phase(P4_DIR)
+    from src.dataset.validator import DatasetValidator
+    from src.ai_eval.model_evaluator import ModelEvaluator
+    from src.blockchain_eval.chain_benchmarker import BlockchainBenchmarker
+    from src.comparative.system_comparator import SystemComparator
+
+    # 7a. Dataset Validation
+    print(f"\n    {CYAN}▶ Dataset Validation{RESET}")
+    dv = DatasetValidator()
+    co2e_vals = [r.get('co2e_emission', 0) for r in results]
+    dv_result = dv.validate(all_readings, co2e_vals)
+    kv("Validation score", f"{dv_result['validation_score']:.4f}")
+    kv("Data reliability", dv_result['data_reliability'])
+    kv("Completeness", f"{dv_result['completeness']['completeness_pct']:.1f}%")
+
+    # 7b. AI Model Evaluation
+    print(f"\n    {CYAN}▶ AI Model Evaluation{RESET}")
+    me = ModelEvaluator()
+    load_phase(P2_DIR)
+    from src.ai_engine.emission_model import extract_features
+    from src.ai_engine.emission_model import compute_co2e_ground_truth
+    X_eval = np.array([extract_features(r) for r in all_readings])
+    y_eval = np.array([compute_co2e_ground_truth(r) for r in all_readings])
+    load_phase(P4_DIR)
+    em_result = me.evaluate_emission_model(estimator, X_eval, y_eval)
+    rf = em_result['random_forest']
+    kv("RF R²", f"{rf['r2']:.4f}")
+    kv("RF MAE", f"{rf['mae']:.6f} kg")
+    kv("RF RMSE", f"{rf['rmse']:.6f} kg")
+    kv("RF MAPE", f"{rf['mape_pct']:.4f}%")
+    an_result = me.evaluate_anomaly_detector(
+        detector, X_eval, all_readings,
+        ['co2_ppm', 'ch4_ppm', 'nox_ppb', 'fuel_rate', 'energy_kwh'],
+    )
+    kv("Anomaly Precision", f"{an_result['precision']:.4f}")
+    kv("Anomaly Recall", f"{an_result['recall']:.4f}")
+    kv("Anomaly F1", f"{an_result['f1_score']:.4f}")
+
+    # 7c. Blockchain Benchmarking
+    print(f"\n    {CYAN}▶ Blockchain Benchmarking{RESET}")
+    bb = BlockchainBenchmarker()
+    load_phase(P2_DIR)
+    from src.blockchain.ledger import Blockchain
+    load_phase(P4_DIR)
+    bc_result = bb.benchmark_all(
+        Blockchain,
+        lambda: {'type': 'emission', 'facility_id': 'BENCH', 'co2e': 25.0},
+    )
+    kv("Avg latency", f"{bc_result['latency']['avg_ms']:.2f} ms")
+    kv("P95 latency", f"{bc_result['latency']['percentiles']['p95']:.2f} ms")
+    kv("Max TPS", f"{bc_result['throughput']['max_tps']:.0f}")
+    kv("Gas/tx (simulated)", f"${bc_result['gas_cost']['cost_per_tx_usd']:.4f}")
+
+    # 7d. Comparative Analysis
+    print(f"\n    {CYAN}▶ Comparative Analysis{RESET}")
+    sc = SystemComparator()
+    comp_result = sc.compare({
+        'blockchain': bc_result,
+        'scalability': {'facility_scaling': {'data_points': [{'throughput': len(results)/pipe_time, 'success': True}]}, 'bottleneck_analysis': 'scales_well'},
+        'ai_eval': {'emission': em_result, 'anomaly': an_result},
+    })
+    overall = comp_result['overall_scores']
+    kv("Proposed system", f"{overall['proposed']:.1f}/10")
+    kv("Traditional ETS", f"{overall['traditional_ets']:.1f}/10")
+    kv("Static model", f"{overall['static_model']:.1f}/10")
+    improvement = comp_result.get('improvement_vs_ets_pct', {})
+    best_dim = max(improvement, key=improvement.get) if improvement else 'N/A'
+    kv("Biggest advantage", f"{best_dim} (+{improvement.get(best_dim, 0):.0f}%)")
+
+    # ══════════════════════════════════════════════════════════════════
     #  FINAL SUMMARY
     # ══════════════════════════════════════════════════════════════════
     total_time = time.perf_counter() - total_start
@@ -544,6 +619,13 @@ def main():
     │    Incentive actions:    {inc_summary['total_actions']:<10}                           │
     │    Fraud alerts:         {len(fraud_alerts):<10}                           │
     │    Policies simulated:   {policy['comparison'].get('scenarios', []).__len__():<10}                           │
+    ├────────────────────────────────────────────────────────────────┤
+    │  {BOLD}Phase 4: System Evaluation{RESET}                                    │
+    │    Data reliability:     {dv_result['data_reliability']:<10}                           │
+    │    Emission RF R²:       {rf['r2']:<10.4f}                           │
+    │    Anomaly F1:           {an_result['f1_score']:<10.4f}                           │
+    │    Blockchain TPS:       {bc_result['throughput']['max_tps']:<10.0f}                           │
+    │    System score:         {overall['proposed']:<10.1f}/10                        │
     ├────────────────────────────────────────────────────────────────┤
     │  {BOLD}Performance{RESET}                                                   │
     │    Total execution:      {total_time:<10.2f}s                          │

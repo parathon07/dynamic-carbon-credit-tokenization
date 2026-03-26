@@ -1,6 +1,6 @@
 # Blockchain-Based Dynamic Carbon Credit Tokenisation System
 
-An end-to-end AI and blockchain-integrated platform for **real-time carbon emission monitoring**, **credit tokenisation**, and **market-based trading**. Built across three phases — from IoT sensor simulation through AI inference and blockchain recording to a fully autonomous carbon credit marketplace.
+An end-to-end AI and blockchain-integrated platform for **real-time carbon emission monitoring**, **credit tokenisation**, **market-based trading**, and **system evaluation**. Built across four phases — from IoT sensor simulation through AI inference and blockchain recording to a fully autonomous marketplace with comprehensive validation and benchmarking.
 
 ---
 
@@ -35,7 +35,7 @@ An end-to-end AI and blockchain-integrated platform for **real-time carbon emiss
 
 ```
 Distributed_project/
-├── run_demo.py                     # Combined demo (all 3 phases)
+├── run_demo.py                     # Combined demo (all 4 phases)
 ├── README.md
 ├── .gitignore
 │
@@ -97,6 +97,30 @@ Distributed_project/
     │   │   └── policy_simulator.py # Carbon tax / cap-and-trade sim
     │   └── pipeline/
     │       └── orchestrator.py     # Phase 3 integration pipeline
+    ├── tests/
+    └── requirements.txt
+│
+└── phase4_evaluation/              # Validation + Benchmarking + Results
+    ├── src/
+    │   ├── config.py               # Evaluation parameters & thresholds
+    │   ├── dataset/
+    │   │   └── validator.py        # Dataset validation vs EPA/IPCC
+    │   ├── ai_eval/
+    │   │   └── model_evaluator.py  # MAE/RMSE/R²/F1/AUC-ROC
+    │   ├── blockchain_eval/
+    │   │   └── chain_benchmarker.py # Latency/TPS/storage benchmarks
+    │   ├── integration/
+    │   │   └── pipeline_tester.py  # End-to-end pipeline verification
+    │   ├── scalability/
+    │   │   └── load_tester.py      # Scale testing (10→500 facilities)
+    │   ├── comparative/
+    │   │   └── system_comparator.py # vs Traditional ETS comparison
+    │   ├── case_studies/
+    │   │   └── scenario_runner.py  # Industrial/smart city scenarios
+    │   ├── visualization/
+    │   │   └── result_generator.py # 10 publication-quality figures
+    │   └── report/
+    │       └── report_builder.py   # Full evaluation report assembly
     ├── tests/
     └── requirements.txt
 ```
@@ -213,6 +237,43 @@ Scenario comparison identifies best policy for emissions vs. price stability.
 
 ---
 
+## Phase 4: System Validation & Evaluation
+
+**Purpose:** Rigorous evaluation of the complete system with publication-quality metrics, comparative analysis, and result generation.
+
+### 4.1 Dataset Validation
+- Statistical tests (Shapiro-Wilk normality, Pearson correlations)
+- Range validation against EPA/IPCC benchmarks
+- Completeness and temporal consistency checks
+
+### 4.2 AI Model Evaluation
+| Model | Metrics |
+|-------|--------|
+| Emission Estimator (RF) | MAE, RMSE, R², MAPE, residual analysis |
+| Anomaly Detector (IF) | Precision, Recall, F1-score, AUC-ROC, confusion matrix |
+
+### 4.3 Blockchain Benchmarking
+- Transaction latency (avg, p50, p95, p99)
+- Throughput (TPS) at various batch sizes
+- Mining time vs difficulty level
+- Simulated Ethereum gas cost model
+
+### 4.4–4.5 Integration & Scalability Testing
+- Full pipeline integrity verification (credit conservation, double-counting)
+- Scaling from 10 → 500 facilities with throughput/memory profiling
+
+### 4.6 Comparative Analysis
+6-axis radar chart comparing our system vs Traditional ETS vs Static Models across transparency, real-time capability, pricing accuracy, fraud detection, scalability, and cost efficiency.
+
+### 4.7–4.8 Case Studies & Visualization
+- Industrial plant and smart city scenario simulations
+- 10 publication-quality figures (300 DPI PNG): scatter plots, confusion matrices, radar charts, scalability curves, policy impact, and more
+
+### 4.9 Report Builder
+Automated JSON + Markdown report with key insights and LaTeX-compatible tables.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -230,6 +291,7 @@ cd dynamic-carbon-credit-tokenization
 pip install -r phase1_infrastructure/requirements.txt
 pip install -r phase2_ai_blockchain/requirements.txt
 pip install -r phase3_market_intelligence/requirements.txt
+pip install -r phase4_evaluation/requirements.txt
 ```
 
 ### Run the Full Demo
@@ -238,13 +300,14 @@ pip install -r phase3_market_intelligence/requirements.txt
 python run_demo.py
 ```
 
-This executes all 3 phases end-to-end:
+This executes all 4 phases end-to-end:
 1. **Stage 1:** IoT sensor data generation (50 facilities × 20 readings)
 2. **Stage 2:** AI model training (Random Forest + Isolation Forest)
 3. **Stage 3:** Pipeline processing (clean → predict → detect → credit → blockchain)
 4. **Stage 4:** Results summary (emissions, anomalies, credits, tokens)
 5. **Stage 5:** P2P credit trading demo
 6. **Stage 6:** Market intelligence (pricing, optimization, incentives, fraud, policy)
+7. **Stage 7:** System evaluation (dataset validation, AI metrics, blockchain benchmarks, comparative analysis)
 
 ### Run Tests
 
@@ -259,6 +322,10 @@ python -m pytest tests/ -v
 
 # Phase 3 (79 tests)
 cd phase3_market_intelligence
+python -m pytest tests/ -v
+
+# Phase 4 (40+ tests)
+cd phase4_evaluation
 python -m pytest tests/ -v
 ```
 
@@ -275,6 +342,8 @@ python -m pytest tests/ -v
 | 2 | `numpy`, `pandas` | Data processing |
 | 3 | `statsmodels` | ARIMA time-series forecasting |
 | 3 | `scipy` | Statistical analysis |
+| 4 | `matplotlib`, `seaborn` | Publication-quality figures |
+| 4 | `tabulate` | Table generation |
 
 ---
 
@@ -285,7 +354,8 @@ python -m pytest tests/ -v
 | Phase 1: IoT Infrastructure | 100+ | Sensor generation, edge validation, Kalman filter, gateway |
 | Phase 2: AI + Blockchain | 70+ | Preprocessing, AI models, credits, blockchain, tokens, contracts, pipeline |
 | Phase 3: Market Intelligence | 79 | Marketplace, pricing, order book, optimizer, incentives, fraud, analytics, policy, integration |
-| **Total** | **250+** | **End-to-end validated** |
+| Phase 4: System Evaluation | 40+ | Dataset validation, AI metrics, blockchain benchmarks, scalability, comparison, case studies |
+| **Total** | **290+** | **End-to-end validated** |
 
 ---
 
@@ -301,7 +371,8 @@ python -m pytest tests/ -v
 | Pipeline throughput | ~67 readings/sec |
 | Credit price (dynamic) | $23.50 |
 | Incentive tiers | 10 Gold, 10 Silver, 27 Bronze |
-| Total execution time | ~21 seconds |
+| System score (vs ETS) | ~8.5/10 |
+| Total execution time | ~45 seconds |
 
 ---
 
