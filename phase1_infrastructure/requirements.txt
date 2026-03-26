@@ -1,0 +1,32 @@
+# Phase 1: Infrastructure Setup
+# Core
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+pydantic==2.6.3
+python-dotenv==1.0.1
+
+# MQTT
+paho-mqtt==2.0.0
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.27
+asyncpg==0.29.0
+
+# Data processing
+numpy==1.26.4
+scipy==1.12.0
+
+# Kafka (optional bridge)
+confluent-kafka==2.3.0
+
+# HTTP client (edge → backend)
+httpx==0.27.0
+aiohttp==3.9.3
+
+# Utilities
+orjson==3.9.15
+
+# Testing
+pytest==8.0.2
+pytest-asyncio==0.23.5
