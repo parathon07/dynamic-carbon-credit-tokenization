@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Data & Models (runtime-generated)
+*.db
+phase1_infrastructure/data/
+!phase1_infrastructure/data/.gitkeep
+phase2_ai_blockchain/models/
+!phase2_ai_blockchain/models/.gitkeep
+
+# Build
+*.egg-info/
+dist/
+build/
