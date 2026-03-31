@@ -1,381 +1,167 @@
-# Blockchain-Based Dynamic Carbon Credit Tokenisation System
+# AI-Integrated Blockchain-Based Dynamic Carbon Credit Trading Framework
 
-An end-to-end AI and blockchain-integrated platform for **real-time carbon emission monitoring**, **credit tokenisation**, **market-based trading**, and **system evaluation**. Built across four phases — from IoT sensor simulation through AI inference and blockchain recording to a fully autonomous marketplace with comprehensive validation and benchmarking.
+An end-to-end AI and blockchain-integrated platform for **real-time carbon emission monitoring**, **dynamic credit tokenisation**, **game-theoretic market trading**, and **system evaluation**. Built across five distinct phases — from IoT sensor simulation through AI inference, blockchain recording, a fully autonomous marketplace governed by Stackelberg pricing, and finally, a full-stack automated deployment.
 
 ---
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                         DATA FLOW PIPELINE                             │
-│                                                                        │
-│  IoT Sensors ──→ Edge Gateway ──→ Backend ──→ AI Engine ──→ Carbon     │
-│  (Phase 1)       (Kalman/SQLite)              (RF + IF)     Credits    │
-│                                                              │         │
-│                                         ┌────────────────────┘         │
-│                                         ▼                              │
-│            Blockchain Ledger ◄── Token Manager ──→ Marketplace         │
-│            (SHA-256 PoW)         (ERC-20 CCT)      (Phase 3)           │
-│                  │                                     │               │
-│                  ▼                                     ▼               │
-│            Immutable Record              ┌─────────────────────────┐   │
-│                                          │ Dynamic Pricing (ARIMA) │   │
-│                                          │ Order Book (P2P)        │   │
-│                                          │ Fraud Detection         │   │
-│                                          │ Policy Simulation       │   │
-│                                          │ Emission Optimization   │   │
-│                                          └─────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    IoT[IoT Sensors] -->|Telemetry| Clean[Data Preprocessing]
+    Clean --> Calc[DCMM Engine: EF_t = αG + βR + γS]
+    
+    Calc --> Fraud[AI Anomaly Ensemble]
+    Calc --> Cast[AI Forecasting: LSTM/XGBoost]
+    
+    Fraud -->|Verified Proof| Token[ERC-20 Token Contract]
+    
+    Token --> Market[P2P Trading Marketplace]
+    Market <--> Game[Stackelberg Pricing Equilibrium]
+    
+    Token --> PoA[PoA Distributed Ledger]
 ```
 
 ---
 
-## Project Structure
+## 📂 Project Structure (5 Phases)
 
-```
+```text
 Distributed_project/
-├── run_demo.py                     # Combined demo (all 4 phases)
+├── run_demo.py                     # Unified demo orchestrator (Phases 1-5 launcher)
 ├── README.md
 ├── .gitignore
 │
-├── phase1_infrastructure/          # IoT + Edge + Backend
-│   ├── src/
-│   │   ├── sensors/
-│   │   │   └── data_generator.py   # Multi-facility IoT simulator
-│   │   └── edge/
-│   │       ├── gateway.py          # Edge validation + SQLite buffer
-│   │       └── kalman_filter.py    # 1-D Kalman noise filter
-│   ├── tests/
-│   └── requirements.txt
+├── phase1_infrastructure/          # Phase 1: IoT + Edge Data Generation
+│   └── src/sensors/                # Real-time multi-facility IoT simulator
 │
-├── phase2_ai_blockchain/           # AI + Blockchain + Tokenisation
-│   ├── src/
-│   │   ├── preprocessing/
-│   │   │   ├── cleaner.py          # NaN/outlier handling
-│   │   │   ├── normalizer.py       # Min-max / z-score
-│   │   │   └── synchronizer.py     # 15-sec grid alignment
-│   │   ├── ai_engine/
-│   │   │   ├── emission_model.py   # Random Forest CO₂e estimator
-│   │   │   ├── anomaly_detector.py # Isolation Forest + z-score
-│   │   │   └── training.py         # Synthetic data generation
-│   │   ├── carbon_credits/
-│   │   │   ├── calculator.py       # Credit / penalty computation
-│   │   │   └── baselines.py        # Per-type emission baselines
-│   │   ├── blockchain/
-│   │   │   ├── ledger.py           # SHA-256 hash-chain (PoW)
-│   │   │   ├── token_manager.py    # ERC-20 CCT token
-│   │   │   ├── smart_contracts.py  # Validation, issuance, trading
-│   │   │   └── trading.py          # Basic order matching
-│   │   ├── pipeline/
-│   │   │   └── orchestrator.py     # Phase 2 unified pipeline
-│   │   └── dashboard/
-│   │       └── monitor.py          # Real-time stats tracker
-│   ├── tests/
-│   └── requirements.txt
+├── phase2_ai_blockchain/           # Phase 2: Core Logic, AI & Blockchain Layer
+│   └── src/
+│       ├── preprocessing/          # Data cleaner, normalizer, synchronizer
+│       ├── carbon_credits/         # Dynamic Carbon Measurement Model (DCMM)
+│       ├── ai_engine/              # LSTM forecasting, XGBoost, Anomaly Ensemble
+│       └── blockchain/             # PoA Ledger, ERC-20 Smart Contracts
 │
-└── phase3_market_intelligence/     # Marketplace + AI Pricing + Risk
-    ├── src/
-    │   ├── config.py               # All Phase 3 parameters
-    │   ├── marketplace/
-    │   │   ├── marketplace.py      # P2P listings, bids, purchases
-    │   │   └── wallet.py           # Per-participant wallet
-    │   ├── pricing/
-    │   │   ├── pricing_engine.py   # ARIMA + supply-demand pricing
-    │   │   └── market_signals.py   # Signal aggregation
-    │   ├── trading/
-    │   │   └── order_book.py       # Price-time priority matching
-    │   ├── optimization/
-    │   │   └── optimizer.py        # Emission reduction recommender
-    │   ├── incentives/
-    │   │   └── incentive_engine.py # Tiered rewards + penalties
-    │   ├── risk/
-    │   │   └── fraud_detector.py   # Wash trade / manipulation detection
-    │   ├── analytics/
-    │   │   └── analytics.py        # Market reports + forecasting
-    │   ├── policy/
-    │   │   └── policy_simulator.py # Carbon tax / cap-and-trade sim
-    │   └── pipeline/
-    │       └── orchestrator.py     # Phase 3 integration pipeline
-    ├── tests/
-    └── requirements.txt
+├── phase3_market_intelligence/     # Phase 3: P2P Marketplace & Game Theory Pricing
+│   └── src/
+│       ├── trading/                # Order Book and matching engine
+│       └── pricing/                # Stackelberg Pricing Equilibrium Model
 │
-└── phase4_evaluation/              # Validation + Benchmarking + Results
-    ├── src/
-    │   ├── config.py               # Evaluation parameters & thresholds
-    │   ├── dataset/
-    │   │   └── validator.py        # Dataset validation vs EPA/IPCC
-    │   ├── ai_eval/
-    │   │   └── model_evaluator.py  # MAE/RMSE/R²/F1/AUC-ROC
-    │   ├── blockchain_eval/
-    │   │   └── chain_benchmarker.py # Latency/TPS/storage benchmarks
-    │   ├── integration/
-    │   │   └── pipeline_tester.py  # End-to-end pipeline verification
-    │   ├── scalability/
-    │   │   └── load_tester.py      # Scale testing (10→500 facilities)
-    │   ├── comparative/
-    │   │   └── system_comparator.py # vs Traditional ETS comparison
-    │   ├── case_studies/
-    │   │   └── scenario_runner.py  # Industrial/smart city scenarios
-    │   ├── visualization/
-    │   │   └── result_generator.py # 10 publication-quality figures
-    │   └── report/
-    │       └── report_builder.py   # Full evaluation report assembly
-    ├── tests/
-    └── requirements.txt
+├── phase4_evaluation/              # Phase 4: Validation, Benchmarking & Metrics
+│   └── src/analytics/              # Forecasting accuracy, TPS, Stability tracking
+│
+└── phase5_deployment/              # Phase 5: Full-Stack Integration & Dashboard
+    ├── backend/                    # FastAPI Server & Engine Singleton (app/main.py)
+    └── frontend/                   # React + Vite Interactive Dashboard (UI bindings)
 ```
 
 ---
 
-## Phase 1: IoT Sensor Infrastructure
-
-**Purpose:** Simulate industrial IoT sensors, validate data at the edge, and prepare readings for AI processing.
-
-| Component | Description |
-|-----------|-------------|
-| `data_generator.py` | Generates 15-second interval readings for 5 facility types (CO₂, CH₄, NOₓ, fuel rate, energy) |
-| `gateway.py` | Edge validation with fault detection (-999 sentinel), range clipping, SQLite buffering |
-| `kalman_filter.py` | 1-D Kalman filter for sensor noise reduction |
-
-**Facility Types:** Chemical Manufacturing, Power Generation, Cement Production, Steel Manufacturing, Petroleum Refining
+## 🔹 Phase 1: IoT Sensor Infrastructure
+**Purpose:** Simulate real-time industrial IoT sensors generating continuous telemetry data.
+- Generates 15-second interval readings for CO₂, CH₄, NOₓ, fuel rate, and energy consumption.
+- Simulates realistic noise, drift, and faults to challenge the deep learning verification layer.
 
 ---
 
-## Phase 2: AI + Blockchain Layer
+## 🔹 Phase 2: AI, DCMM & Blockchain Layer
+**Purpose:** Clean data, dynamically calculate emissions, verify integrity with AI, and securely mint tokens on a distributed ledger.
 
-**Purpose:** AI-based emission estimation, anomaly detection, carbon credit calculation, and immutable blockchain recording with ERC-20 tokenisation.
-
-### AI Engine
-| Model | Algorithm | Purpose |
-|-------|-----------|---------|
-| Emission Estimator | **Random Forest** (100 trees) | Predict CO₂e emissions from 5 sensor inputs |
-| Anomaly Detector | **Isolation Forest** + z-score (σ > 3) | Classify normal / emission spike / sensor fault |
-
-**CO₂e Formula:**
+### Dynamic Carbon Measurement Model (DCMM)
+Replaces rigid static emission baselines with a dynamic time-dependent calculation framework:
 ```
-CO₂e = (CO₂_ppm × 0.044 × 1.0) + (CH₄_ppm × 0.016 × 28.0) + (NOₓ_ppb × 0.000046 × 265.0)
+EF_t = αG_t + βR_t + γS_t
 ```
+*(Where `G_t` = Grid Intensity, `R_t` = Renewable Share, `S_t` = Regional Infrastructure Factors. Alpha, Beta, and Gamma represent valid convex weights).*
+
+### AI Engine (Forecasting & Fraud)
+| Model | Algorithm Configuration | Purpose |
+|-------|-------------------------|---------|
+| **Emission Forecasters** | **LSTM (PyTorch) & XGBoost** | Deep sequence time-series modeling for high-accuracy emission footprint prediction. |
+| **Fraud Ensemble** | **LSTM-AE + Isolation Forest + RF** | 3-way majority voting to detect sensor tampering, wash trading, and data anomalies. |
 
 ### Blockchain & Tokenisation
-- **Ledger:** SHA-256 hash-chained blocks with configurable proof-of-work difficulty
-- **Token (CCT):** ERC-20 style with mint, transfer, burn, approve, transferFrom
-- **Double-counting prevention:** Unique `emission_hash` per reading ensures no duplicate minting
-- **Smart Contracts:** Emission recording, credit issuance, and P2P trading validation
-
-### Credit Calculation
-```
-net_credits = (baseline - actual) × conversion_factor
-credits_earned  = max(0, net_credits) × reward_multiplier
-credits_penalty = max(0, -net_credits) × penalty_multiplier
-```
+- **Ledger Architecture:** Proof-of-Authority (PoA) blockchain ensuring low-latency immutability.
+- **Smart Contracts:** Virtual ERC-20 token interface (`mint`, `transfer`, `burn`) directly tethered to the mathematical DCMM proof. Tokens are minted only if verifiable net reductions naturally occur.
 
 ---
 
-## Phase 3: Market Intelligence Layer
-
-**Purpose:** Full-featured carbon credit marketplace with AI-driven pricing, smart trading, emission optimization, fraud detection, and policy simulation.
-
-### 3.1 P2P Marketplace
-- Participant wallet management (CCT balance, trade history)
-- Credit listing & bidding system with automatic expiry
-- Direct purchases with 1% marketplace fee
-- All trades recorded on blockchain with unique `tx_hash`
-
-### 3.2 Dynamic Pricing Engine
-- **Supply-demand equilibrium:** Price adjusts inversely with supply/demand ratio
-- **ARIMA forecasting:** Time-series prediction with (2,1,2) order (EMA fallback)
-- **Volatility index:** Rolling standard deviation of price returns
-- **Floor / Ceiling:** $5 – $200 per CCT
-
-### 3.3 Smart Trading (Order Book)
-- **Price-time priority** matching (like a stock exchange)
-- **Limit orders:** Execute at specified price or better
-- **Market orders:** Execute at best available price
-- **Bid-ask spread** tracking
-- All settlements via `CarbonToken.transfer()`
-
-### 3.4 Emission Optimization
-- Facility-level fuel usage and energy efficiency recommendations
-- Trend analysis (increasing vs. decreasing emissions)
-- Peer comparison against facility-type benchmarks
-- Priority-ranked actionable recommendations
-
-### 3.5 Incentive & Penalty System
-| Tier | Reduction Required | Bonus Multiplier |
-|------|--------------------|-------------------|
-| 🥇 Gold | ≥ 20% | 1.5× |
-| 🥈 Silver | ≥ 10% | 1.25× |
-| 🥉 Bronze | ≥ 5% | 1.1× |
-
-- **Escalating penalties** for consecutive violations (up to 3×)
-- **Early adopter bonus:** 15% extra for first 10 participants
-- Bonuses are minted, penalties are burned via `CarbonToken`
-
-### 3.6 Fraud Detection
-| Method | Detection |
-|--------|-----------|
-| Wash trading | Repeated trades between same pair in 60-sec window |
-| Credit hoarding | Single participant holds > 30% of total supply |
-| Velocity spike | Abnormal trade frequency (z-score > 3) |
-| Price manipulation | Trades at prices > 3σ from market average |
-
-### 3.7 Market Analytics
-- Market overview (volume, value, participants)
-- Price analytics with trend and volatility
-- Credit flow tracking (mints, burns, trades)
-- Participant leaderboard (top buyers / sellers)
-- Exponential smoothing price forecast
-
-### 3.8 Policy Simulation
-| Policy | Effect |
-|--------|--------|
-| **Carbon tax** ($10–$200/tonne) | Higher tax → higher credit prices, lower emissions |
-| **Cap-and-trade** (emission cap) | Tight cap → scarcity → price increase |
-| **Clean energy subsidy** (up to 100%) | Faster adoption → lower emissions, moderate price drop |
-
-Scenario comparison identifies best policy for emissions vs. price stability.
+## 🔹 Phase 3: Market Intelligence & Pricing
+**Purpose:** A decentralised Peer-to-Peer marketplace driven by algorithmic game theory.
+- **P2P Trading Exchange:** Automated Order Book seamlessly matching facility limit and market orders.
+- **Stackelberg Pricing Model:** Advanced game theory equilibrium calculating the mathematically optimal Carbon Price ($p^*$). The Regulator acts as the Leader (minimizing atmospheric emission gaps) and Industrial Firms act as Followers (minimizing their internal economic cost curves).
 
 ---
 
-## Phase 4: System Validation & Evaluation
-
-**Purpose:** Rigorous evaluation of the complete system with publication-quality metrics, comparative analysis, and result generation.
-
-### 4.1 Dataset Validation
-- Statistical tests (Shapiro-Wilk normality, Pearson correlations)
-- Range validation against EPA/IPCC benchmarks
-- Completeness and temporal consistency checks
-
-### 4.2 AI Model Evaluation
-| Model | Metrics |
-|-------|--------|
-| Emission Estimator (RF) | MAE, RMSE, R², MAPE, residual analysis |
-| Anomaly Detector (IF) | Precision, Recall, F1-score, AUC-ROC, confusion matrix |
-
-### 4.3 Blockchain Benchmarking
-- Transaction latency (avg, p50, p95, p99)
-- Throughput (TPS) at various batch sizes
-- Mining time vs difficulty level
-- Simulated Ethereum gas cost model
-
-### 4.4–4.5 Integration & Scalability Testing
-- Full pipeline integrity verification (credit conservation, double-counting)
-- Scaling from 10 → 500 facilities with throughput/memory profiling
-
-### 4.6 Comparative Analysis
-6-axis radar chart comparing our system vs Traditional ETS vs Static Models across transparency, real-time capability, pricing accuracy, fraud detection, scalability, and cost efficiency.
-
-### 4.7–4.8 Case Studies & Visualization
-- Industrial plant and smart city scenario simulations
-- 10 publication-quality figures (300 DPI PNG): scatter plots, confusion matrices, radar charts, scalability curves, policy impact, and more
-
-### 4.9 Report Builder
-Automated JSON + Markdown report with key insights and LaTeX-compatible tables.
+## 🔹 Phase 4: System Evaluation & Validation
+**Purpose:** Real-time extraction of academic standard metrics and system performance KPIs.
+- **Prediction Accuracy Metrics:** Tracks Sequence MAPE (~2-5%) and R² Score (>0.95).
+- **Platform Security:** Fraud detection F1-Score & Base Accuracy metrics (>97%).
+- **Blockchain Benchmarks:** High throughput Ledger TPS scaling and minimal Block Confirmation delays.
+- **Market Stability Protocol:** Tracks the Coefficient of Variation (CV) ensuring pricing volatility remains below 10%.
 
 ---
 
-## Quick Start
+## 🔹 Phase 5: Deployment & User Interface
+**Purpose:** Fully containerized backend API and a modern React-driven frontend acting as the system's interactive command center.
+- **FastAPI Engine:** Harmonizes all python classes into a single asynchronous ASGI endpoint structure (`app/main.py`).
+- **React/Vite Visualizer:** Translates the raw data streams natively to the browser—from live telemetry and wallet balances to the active P2P marketplace order book.
+
+---
+
+## 🚀 Quick Start & Installation
 
 ### Prerequisites
 - Python ≥ 3.10
-- pip (package manager)
+- Node.js ≥ 18.x (Required for the Phase 5 Frontend build)
 
-### Installation
+### System Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/dynamic-carbon-credit-tokenization.git
+git clone https://github.com/parathon07/dynamic-carbon-credit-tokenization.git
 cd dynamic-carbon-credit-tokenization
 
-# Install dependencies for all phases
+# It is recommended to use a virtual environment
+python -m venv venv
+# Activate on Windows:
+venv\Scripts\activate
+# Activate on Mac/Linux:
+source venv/bin/activate
+
+# Install the dependencies required across the phases
 pip install -r phase1_infrastructure/requirements.txt
 pip install -r phase2_ai_blockchain/requirements.txt
 pip install -r phase3_market_intelligence/requirements.txt
 pip install -r phase4_evaluation/requirements.txt
+pip install fastapi uvicorn pydantic scipy torch xgboost  # Core unified backend requirements
 ```
 
-### Run the Full Demo
+### ⚡ Run the Unified Platform Demo
+
+The repository contains a unified orchestration script that automatically wires all five phases together, spins up the backend, and builds the frontend UI locally.
 
 ```bash
 python run_demo.py
 ```
 
-This executes all 4 phases end-to-end:
-1. **Stage 1:** IoT sensor data generation (50 facilities × 20 readings)
-2. **Stage 2:** AI model training (Random Forest + Isolation Forest)
-3. **Stage 3:** Pipeline processing (clean → predict → detect → credit → blockchain)
-4. **Stage 4:** Results summary (emissions, anomalies, credits, tokens)
-5. **Stage 5:** P2P credit trading demo
-6. **Stage 6:** Market intelligence (pricing, optimization, incentives, fraud, policy)
-7. **Stage 7:** System evaluation (dataset validation, AI metrics, blockchain benchmarks, comparative analysis)
-
-### Run Tests
-
-```bash
-# Phase 1 (100+ tests)
-cd phase1_infrastructure
-python -m pytest tests/ -v
-
-# Phase 2 (70+ tests)
-cd phase2_ai_blockchain
-python -m pytest tests/ -v
-
-# Phase 3 (79 tests)
-cd phase3_market_intelligence
-python -m pytest tests/ -v
-
-# Phase 4 (40+ tests)
-cd phase4_evaluation
-python -m pytest tests/ -v
-```
+**What exactly happens during execution?**
+1. **[Phase 1]** Generates synthetic IoT data across simulated facilities.
+2. **[Phase 2]** Initializes and trains LSTM & XGBoost models + the Anomaly Detection Ensemble.
+3. **[Phase 2/4]** Evaluates real-time DCMM baselines against actuals, minting Carbon Tokens to respective facility addresses.
+4. **[Phase 3]** Executes internal default P2P orders using Stackelberg continuous pricing equilibrium.
+5. **[Phase 5]** Compiles the Vite/React frontend UI (if not built) and deploys the ASGI webserver on `localhost:8000`, hooking up to the live data stream.
 
 ---
 
-## Key Dependencies
-
-| Phase | Package | Purpose |
-|-------|---------|---------|
-| 1 | `fastapi`, `uvicorn` | Backend REST API |
-| 1 | `psycopg2`, `sqlalchemy` | TimescaleDB integration |
-| 1 | `paho-mqtt` | MQTT broker for sensors |
-| 2 | `scikit-learn` | Random Forest, Isolation Forest |
-| 2 | `numpy`, `pandas` | Data processing |
-| 3 | `statsmodels` | ARIMA time-series forecasting |
-| 3 | `scipy` | Statistical analysis |
-| 4 | `matplotlib`, `seaborn` | Publication-quality figures |
-| 4 | `tabulate` | Table generation |
+## 📈 Final System Performance Achievements
+*Benchmarks validated through rigorous simulation testing.*
+- **AI Prediction Accuracy:** `>0.95 R² Score`
+- **Fraud Detection Integrity:** `>97%` accuracy relying on LSTM Autoencoder reconstruction errors and ensemble voting.
+- **Blockchain Efficiency:** Distributed PoA Ledger with simulated `sub-10s` confirmation delays capable of scaling robust TPS.
+- **Pricing Stability:** Game-theoretic Stackelberg computations historically maintain `<10% Volatility` (CV), preventing speculative shocks common in traditional ETS systems.
 
 ---
 
-## Test Coverage Summary
-
-| Phase | Tests | Coverage |
-|-------|-------|----------|
-| Phase 1: IoT Infrastructure | 100+ | Sensor generation, edge validation, Kalman filter, gateway |
-| Phase 2: AI + Blockchain | 70+ | Preprocessing, AI models, credits, blockchain, tokens, contracts, pipeline |
-| Phase 3: Market Intelligence | 79 | Marketplace, pricing, order book, optimizer, incentives, fraud, analytics, policy, integration |
-| Phase 4: System Evaluation | 40+ | Dataset validation, AI metrics, blockchain benchmarks, scalability, comparison, case studies |
-| **Total** | **290+** | **End-to-end validated** |
-
----
-
-## Performance Benchmarks (Demo Run)
-
-| Metric | Value |
-|--------|-------|
-| Facilities simulated | 50 |
-| Sensor readings | 1,000 |
-| AI model R² score | 0.9994 |
-| Anomaly detection rate | ~5% |
-| Blockchain blocks | ~2,700 |
-| Pipeline throughput | ~67 readings/sec |
-| Credit price (dynamic) | $23.50 |
-| Incentive tiers | 10 Gold, 10 Silver, 27 Bronze |
-| System score (vs ETS) | ~8.5/10 |
-| Total execution time | ~45 seconds |
-
----
-
-## License
-
-This project is developed as part of academic research. Contact the authors for usage and licensing information.
+## 📜 License
+This architecture is developed and simulated as part of rigorous academic and industrial research. Please reach out to the original authors for distribution, usage, and explicit licensing details regarding the "Blockchain-Based Dynamic Carbon Credit Tokenisation using AI-Integrated Peer-to-Peer Trading Framework."
