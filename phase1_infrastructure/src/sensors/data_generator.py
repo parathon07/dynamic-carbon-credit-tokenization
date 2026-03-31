@@ -74,9 +74,9 @@ class FacilitySimulator:
         self.facility_type = FACILITY_TYPES[facility_index % len(FACILITY_TYPES)]
         self.baselines = SENSOR_BASELINES[self.facility_type]
 
-        self.rng = np.random.default_rng(
-            rng_seed if rng_seed is not None else facility_index
-        )
+        import time
+        seed = rng_seed if rng_seed is not None else (time.time_ns() + facility_index) % (2**32)
+        self.rng = np.random.default_rng(seed)
 
         # Autoregressive state for each sensor (starts at mid-range)
         self._state: dict[str, float] = {}

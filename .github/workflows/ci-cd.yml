@@ -1,0 +1,80 @@
+name: Carbon Credit CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
+jobs:
+  # ── Lint & Test Backend ────────────────────────────────────────
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r phase2_ai_blockchain/requirements.txt
+          pip install -r phase3_market_intelligence/requirements.txt
+          pip install -r phase5_deployment/backend/requirements.txt
+
+      - name: Run Phase 2 tests
+        run: cd phase2_ai_blockchain && python -m pytest tests/ -v --tb=short
+
+      - name: Run Phase 3 tests
+        run: cd phase3_market_intelligence && python -m pytest tests/ -v --tb=short
+
+      - name: Run Phase 4 tests
+        run: cd phase4_evaluation && python -m pytest tests/ -v --tb=short
+
+      - name: Run Phase 5 API tests
+        run: cd phase5_deployment && python -m pytest backend/tests/ -v --tb=short
+
+  # ── Build Frontend ────────────────────────────────────────────
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: cd phase5_deployment/frontend && npm install
+
+      - name: Build
+        run: cd phase5_deployment/frontend && npm run build
+
+  # ── Docker Build ──────────────────────────────────────────────
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Backend Image
+        run: docker build -f phase5_deployment/Dockerfile.backend -t carbon-backend:latest .
+
+      - name: Build Frontend Image
+        run: docker build -f phase5_deployment/Dockerfile.frontend -t carbon-frontend:latest .
+
+      - name: Verify images
+        run: |
+          docker images | grep carbon
+          echo "Build successful"

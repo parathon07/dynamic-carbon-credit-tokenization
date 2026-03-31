@@ -17,10 +17,18 @@ import joblib
 import numpy as np
 
 from src.config import MODELS_DIR, FACILITY_TYPES, SENSOR_BASELINES, SENSOR_FIELDS
-from src.ai_engine.emission_model import (
-    EmissionEstimator, compute_co2e_ground_truth, extract_features,
-)
-from src.ai_engine.anomaly_detector import AnomalyDetector
+
+def compute_co2e_ground_truth(reading: Dict[str, Any]) -> float:
+    # Approx based on GWP: CO2=1, CH4=28, N2O=265
+    return (reading.get("co2_ppm", 0)*0.044*1.0 + 
+            reading.get("ch4_ppm", 0)*0.016*28.0 + 
+            reading.get("nox_ppb", 0)*0.000046*265.0)
+
+def extract_features(reading: Dict[str, Any]) -> np.ndarray:
+    return np.array([
+        reading.get("co2_ppm", 0), reading.get("ch4_ppm", 0), reading.get("nox_ppb", 0),
+        reading.get("fuel_rate", 0), reading.get("energy_kwh", 0), 12, 2
+    ])
 
 logger = logging.getLogger("ai_engine.training")
 
@@ -28,7 +36,7 @@ logger = logging.getLogger("ai_engine.training")
 def generate_synthetic_data(
     n_facilities: int = 50,
     readings_per_facility: int = 200,
-    seed: int = 42,
+    seed: int | None = None,
 ) -> Tuple[List[Dict[str, Any]], np.ndarray, np.ndarray]:
     """
     Generate synthetic training data mimicking Phase 1 simulators.
@@ -36,7 +44,9 @@ def generate_synthetic_data(
     Returns:
         (readings, X_features, y_co2e)
     """
-    rng = np.random.RandomState(seed)
+    import time
+    actual_seed = seed if seed is not None else int(time.time_ns()) % (2**32)
+    rng = np.random.RandomState(actual_seed)
     readings = []
     base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
@@ -81,7 +91,7 @@ def generate_synthetic_data(
 def train_and_save(
     n_facilities: int = 50,
     readings_per_facility: int = 200,
-    seed: int = 42,
+    seed: int | None = None,
 ) -> Dict[str, Any]:
     """
     Full training pipeline: generate data → train models → save to disk.

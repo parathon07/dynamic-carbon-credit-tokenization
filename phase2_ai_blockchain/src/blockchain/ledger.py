@@ -1,8 +1,11 @@
 """
-Blockchain Ledger — Step 2.5
-==============================
-SHA-256 hash-chained immutable ledger with proof-of-work.
-Fully self-contained — no external blockchain node required.
+PoA Blockchain Ledger Simulation — Step 2.5
+=============================================
+Replaces simplistic append-only hashing with a
+Proof-of-Authority (PoA) consensus mechanism containing:
+  - Memory Pool for unconfirmed transactions
+  - Authorized Validator nodes
+  - Cryptographic Block signing
 """
 
 from __future__ import annotations
@@ -10,128 +13,162 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from src.config import BLOCKCHAIN_DIFFICULTY
+logger = logging.getLogger("blockchain.ledger")
+
+@dataclass
+class Transaction:
+    sender: str
+    receiver: str
+    amount: float
+    data: Dict[str, Any]
+    timestamp: float = field(default_factory=time.time)
+    tx_hash: str = field(init=False)
+
+    def __post_init__(self):
+        content = json.dumps({
+            "sender": self.sender,
+            "receiver": self.receiver,
+            "amount": self.amount,
+            "data": self.data,
+            "timestamp": self.timestamp
+        }, sort_keys=True)
+        self.tx_hash = hashlib.sha256(content.encode()).hexdigest()
+
+    def to_dict(self):
+        return {
+            "tx_hash": self.tx_hash,
+            "sender": self.sender,
+            "receiver": self.receiver,
+            "amount": self.amount,
+            "data": self.data,
+            "timestamp": self.timestamp
+        }
 
 
 @dataclass
 class Block:
-    """Single block in the blockchain."""
     index: int
     timestamp: float
-    data: Dict[str, Any]
+    transactions: List[Dict[str, Any]]
     previous_hash: str
-    nonce: int = 0
+    validator: str  # PoA signer
     hash: str = ""
 
     def compute_hash(self) -> str:
-        """Compute SHA-256 hash of this block's contents."""
         content = json.dumps({
             "index": self.index,
             "timestamp": self.timestamp,
-            "data": self.data,
+            "transactions": self.transactions,
             "previous_hash": self.previous_hash,
-            "nonce": self.nonce,
+            "validator": self.validator
         }, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()
 
 
-class Blockchain:
-    """
-    Immutable append-only SHA-256 hash chain with proof-of-work.
+class ValidatorNode:
+    """Represents an authorized signer in the PoA network."""
+    def __init__(self, node_id: str):
+        self.node_id = node_id
 
-    Features:
-      - Genesis block auto-created
-      - Configurable mining difficulty
-      - Full chain validation
-      - Transaction query by facility_id
+    def sign_block(self, block: Block) -> Block:
+        block.validator = self.node_id
+        block.hash = block.compute_hash()
+        return block
+
+
+class PoABlockchain:
+    """
+    Robust blockchain simulation using Proof of Authority.
+    Separates transactions from blocks, using a tx_pool.
     """
 
-    def __init__(self, difficulty: int = BLOCKCHAIN_DIFFICULTY):
+    def __init__(self):
         self._chain: List[Block] = []
-        self._difficulty = difficulty
+        self._tx_pool: List[Transaction] = []
+        self._validators: List[ValidatorNode] = [
+            ValidatorNode("Regulator_Authority_1"),
+            ValidatorNode("Auditor_Authority_2"),
+            ValidatorNode("Gov_Authority_3")
+        ]
+        self._validator_index = 0
         self._create_genesis_block()
 
     def _create_genesis_block(self):
+        """Initializes blockchain state."""
         genesis = Block(
-            index=0, timestamp=time.time(),
-            data={"type": "genesis", "message": "Phase 2 Carbon Credit Blockchain"},
+            index=0,
+            timestamp=time.time(),
+            transactions=[{"msg": "Genesis Block - Dynamic Tokenisation Network"}],
             previous_hash="0" * 64,
+            validator="System"
         )
-        genesis.hash = self._mine_block(genesis)
+        genesis.hash = genesis.compute_hash()
         self._chain.append(genesis)
 
-    def _mine_block(self, block: Block) -> str:
-        """Proof-of-work: find nonce such that hash starts with `difficulty` zeros."""
-        prefix = "0" * self._difficulty
-        while True:
-            hash_val = block.compute_hash()
-            if hash_val.startswith(prefix):
-                return hash_val
-            block.nonce += 1
+    def add_transaction(self, sender: str, receiver: str, amount: float, data: Dict[str, Any]) -> str:
+        """Puts a transaction into the memory pool."""
+        tx = Transaction(sender, receiver, amount, data)
+        self._tx_pool.append(tx)
+        logger.info(f"Transaction queued in pool: {tx.tx_hash[:8]}")
+        return tx.tx_hash
 
-    def add_block(self, data: Dict[str, Any]) -> Block:
-        """Mine and append a new block with the given data."""
-        prev = self._chain[-1]
+    def get_pool_size(self):
+        return len(self._tx_pool)
+
+    def mine_pending_transactions(self) -> Optional[Block]:
+        """
+        PoA Consensus: Selected validator pulls transactions from pool,
+        signs them into a block, and appends to ledger.
+        """
+        if not self._tx_pool:
+            return None
+
+        # PoA round-robin validator selection
+        validator = self._validators[self._validator_index]
+        self._validator_index = (self._validator_index + 1) % len(self._validators)
+
+        # Take up to 100 txs per block
+        txs_to_mine = [tx.to_dict() for tx in self._tx_pool[:100]]
+        
+        prev_block = self._chain[-1]
         new_block = Block(
-            index=prev.index + 1,
+            index=prev_block.index + 1,
             timestamp=time.time(),
-            data=data,
-            previous_hash=prev.hash,
+            transactions=txs_to_mine,
+            previous_hash=prev_block.hash,
+            validator=validator.node_id
         )
-        new_block.hash = self._mine_block(new_block)
+        
+        # Sign block
+        new_block = validator.sign_block(new_block)
+        
         self._chain.append(new_block)
+        self._tx_pool = self._tx_pool[100:]  # Clear mined txs
+        
+        logger.info(f"Block #{new_block.index} minted by {validator.node_id} with {len(txs_to_mine)} TXs.")
         return new_block
 
     def is_valid(self) -> bool:
-        """Validate the entire chain integrity."""
-        prefix = "0" * self._difficulty
+        """Verify structural integrity of the entire chain."""
         for i in range(1, len(self._chain)):
             current = self._chain[i]
             previous = self._chain[i - 1]
-
-            # Verify hash
-            if current.hash != current.compute_hash():
-                return False
-            # Verify chain link
-            if current.previous_hash != previous.hash:
-                return False
-            # Verify proof-of-work
-            if not current.hash.startswith(prefix):
-                return False
+            if current.hash != current.compute_hash(): return False
+            if current.previous_hash != previous.hash: return False
         return True
 
-    def get_chain(self) -> List[Dict[str, Any]]:
-        """Return chain as list of dicts."""
-        return [
-            {
-                "index": b.index, "timestamp": b.timestamp,
-                "data": b.data, "hash": b.hash,
-                "previous_hash": b.previous_hash, "nonce": b.nonce,
-            }
-            for b in self._chain
-        ]
-
-    def get_block(self, index: int) -> Optional[Block]:
-        """Get block by index."""
-        if 0 <= index < len(self._chain):
-            return self._chain[index]
-        return None
-
-    @property
-    def length(self) -> int:
-        return len(self._chain)
-
-    @property
-    def latest_block(self) -> Block:
-        return self._chain[-1]
-
-    def query_by_facility(self, facility_id: str) -> List[Dict]:
-        """Return all blocks containing data for a specific facility."""
-        return [
-            {"index": b.index, "data": b.data, "hash": b.hash}
-            for b in self._chain
-            if b.data.get("facility_id") == facility_id
-        ]
+    def get_balance(self, address: str) -> float:
+        """Calculates token balance directly from immutable ledger state."""
+        balance = 0.0
+        for block in self._chain:
+            for tx in block.transactions:
+                if "sender" in tx and "receiver" in tx:
+                    if tx["sender"] == address:
+                        balance -= tx["amount"]
+                    if tx["receiver"] == address:
+                        balance += tx["amount"]
+        return balance

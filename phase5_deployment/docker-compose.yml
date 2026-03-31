@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # ── Backend (FastAPI) ──────────────────────────────────────────
+  backend:
+    build:
+      context: ..
+      dockerfile: phase5_deployment/Dockerfile.backend
+    container_name: carbon-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=change-this-in-production
+      - DEBUG=false
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
+    networks:
+      - carbon-net
+
+  # ── Frontend (React + Nginx) ───────────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: phase5_deployment/Dockerfile.frontend
+    container_name: carbon-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - carbon-net
+
+  # ── Prometheus (Monitoring) ────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: carbon-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    networks:
+      - carbon-net
+
+  # ── Grafana (Dashboards) ───────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: carbon-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=carbon123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - carbon-net
+
+volumes:
+  backend_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  carbon-net:
+    driver: bridge
