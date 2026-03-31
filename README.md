@@ -162,6 +162,3 @@ python run_demo.py
 - **Pricing Stability:** Game-theoretic Stackelberg computations historically maintain `<10% Volatility` (CV), preventing speculative shocks common in traditional ETS systems.
 
 ---
-
-## 📜 License
-This architecture is developed and simulated as part of rigorous academic and industrial research. Please reach out to the original authors for distribution, usage, and explicit licensing details regarding the "Blockchain-Based Dynamic Carbon Credit Tokenisation using AI-Integrated Peer-to-Peer Trading Framework."
