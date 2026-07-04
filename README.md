@@ -20,7 +20,19 @@ graph TD
     Market <--> Game[Stackelberg Pricing Equilibrium]
     
     Token --> PoA[PoA Distributed Ledger]
+
 ```
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+|-------|--------------|
+| Programming Language | Python 3.10+ |
+| AI & Machine Learning | PyTorch, XGBoost, Scikit-learn |
+| Backend | FastAPI |
+| Frontend | React, Vite |
+| Blockchain | Proof-of-Authority (PoA), ERC-20 |
+| Data Processing | Pandas, NumPy |
+| Database | SQLite |
 
 ---
 
@@ -153,6 +165,14 @@ python run_demo.py
 5. **[Phase 5]** Compiles the Vite/React frontend UI (if not built) and deploys the ASGI webserver on `localhost:8000`, hooking up to the live data stream.
 
 ---
+## ❓ Troubleshooting
+
+### Common Issues
+
+- Ensure Python 3.10 or later is installed.
+- Activate the virtual environment before installing dependencies.
+- Install Node.js (v18+) before building the frontend.
+- Verify all phase-specific requirements are installed before running `run_demo.py`.
 
 ## 📈 Final System Performance Achievements
 *Benchmarks validated through rigorous simulation testing.*
